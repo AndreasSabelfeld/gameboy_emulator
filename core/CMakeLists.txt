@@ -23,6 +23,14 @@ add_library(gbcore STATIC
         include/MMU.h
         include/PPU.h
         include/Timer.h
+        src/DecodeInstructions.cpp
+        include/DecodeInstructions.h
+        include/FetchInstruction.h
+        include/ExecuteInstruction.h
+        src/FetchInstruction.cpp
+        src/ExecuteInstruction.cpp
+        src/SerialCable.cpp
+        include/SerialCable.h
 )
 
 # Tell the compiler where to find the header files for the core
