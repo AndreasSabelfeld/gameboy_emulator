@@ -23,17 +23,12 @@ add_library(gbcore STATIC
         include/MMU.h
         include/PPU.h
         include/Timer.h
-        src/DecodeInstructions.cpp
-        include/DecodeInstructions.h
-        include/FetchInstruction.h
-        include/ExecuteInstruction.h
-        src/FetchInstruction.cpp
-        src/ExecuteInstruction.cpp
+        src/CPU_Instructions.cpp
+        src/CPU_Execute.cpp
         src/SerialCable.cpp
         include/SerialCable.h
 )
 
-# Tell the compiler where to find the header files for the core
 target_include_directories(gbcore PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -41,3 +36,6 @@ target_include_directories(gbcore PUBLIC
 target_include_directories(gbcore PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+
+target_include_directories(gbcore PRIVATE src)

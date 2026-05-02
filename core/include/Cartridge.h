@@ -19,10 +19,10 @@ namespace gb::core {
 
     private:
         std::vector<uint8_t> rom;                           // vector since rom sizes are dynamic
-        std::vector<uint8_t> sram;                          // vector since rom sizes are dynamic
+        std::vector<uint8_t> sram;                          // vector since sram sizes are dynamic
 
-        uint32_t current_rom_bank{};
-        uint32_t current_sram_bank{};
+        uint32_t current_rom_bank;
+        uint32_t current_sram_bank;
         bool ram_enabled{};
 
         void load_rom(std::string_view file_path);

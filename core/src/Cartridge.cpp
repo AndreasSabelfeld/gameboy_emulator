@@ -37,18 +37,27 @@ namespace gb::core {
     uint8_t Cartridge::read_rom(uint16_t address) const {
         if (address < rom.size()) {
             return rom[address];
+        } if (address < 0x8000) {
+            // Bank 1-127 is dynamically mapped
+            uint32_t rom_offset = current_rom_bank * 0x4000;
+            uint32_t real_index = rom_offset + (address - 0x4000);
+
+            if (real_index < rom.size()) {
+                return rom[real_index];
+            }
         }
 
         return 0xFF;
     }
 
     uint8_t Cartridge::read_sram(uint16_t address) const {
-        if (address < sram.size()) {
-            if (!ram_enabled || sram.empty()) return 0xFF;      // Locked or doesn't exist
+        if (!ram_enabled || sram.empty()) return 0xFF;      // Locked or doesn't exist
 
-            uint32_t ram_offset = current_sram_bank * 0x2000;
-            uint32_t real_index = ram_offset + (address - 0xA000);
+        uint32_t ram_offset = current_sram_bank * 0x2000;
+        uint32_t real_index = ram_offset + (address - 0xA000);
 
+        // Only read if the calculated physical index is within the vector bounds
+        if (real_index < sram.size()) {
             return sram[real_index];
         }
 
@@ -60,6 +69,13 @@ namespace gb::core {
             // Writing 0x0A in the lower nibble enables RAM, any other value disables it
             ram_enabled = ((value & 0x0F) == 0x0A);
         } else if (address >= 0x2000 && address <= 0x3FFF) {    // rom bank switch command
+            // mirroring of out of bounds rom banks:
+            uint8_t rom_banks = rom.size() / 0x4000;
+            uint8_t mask = rom_banks - 1;
+
+            value &= 0x1F;
+            value &= mask;
+
             if (value == 0) value = 1;
             current_rom_bank = value;
         } else if (address >= 0xA000 && address <= 0xBFFF) {    // Actual write to RAM
@@ -68,7 +84,9 @@ namespace gb::core {
             uint32_t ram_offset = current_sram_bank * 0x2000;
             uint32_t real_index = ram_offset + (address - 0xA000);
 
-            sram[real_index] = value;
+            if (real_index < sram.size()) {
+                sram[real_index] = value;
+            }
         }
     }
 

@@ -9,7 +9,7 @@
 
 namespace gb::core {
 
-    // TODO Forward declarations for other hardware components
+    // Forward declarations for other hardware components
     class Cartridge;
     class PPU;       // Pixel Processing Unit (Graphics)
     class APU;       // Audio Processing Unit

@@ -8,6 +8,8 @@
 namespace gb::core {
     SerialCable::SerialCable() = default;
 
+    std::string serial_buffer;
+
     uint8_t SerialCable::read(uint16_t address) const {
         if (address == 0xFF01) {
             return serial_transfer_data;
@@ -21,17 +23,22 @@ namespace gb::core {
     void SerialCable::write(uint16_t address, uint8_t value) {
         if (address == 0xFF01) {
             serial_transfer_data = value;
-        } if (address == 0xFF02) {
+        } else if (address == 0xFF02) {
             serial_transfer_control = value;
 
-            // --- THE BLARGG TEST HACK ---
+            // --- BLARGG TEST ---
             // If Bit 7 (0x80) is 1, and Bit 0 (0x01) is 1,
             // the game is asking to start a transfer using the internal clock.
             if (value == 0x81) {
-                std::cout << (char)serial_transfer_data << std::flush;
+                std::cout << static_cast<char>(serial_transfer_data) << std::flush;
+                serial_buffer += static_cast<char>(serial_transfer_data);
                 serial_transfer_control &= 0x7F; // Turn off bit 7
 
                 // todo: signal MMU to trigger the Serial Interrupt here!
+            }
+            if (serial_buffer.find("Passed") != std::string::npos) {
+                std::cout << "\nTest ROM passed! Halting emulator.\n";
+                exit(0); // Or gracefully signal your main loop to stop
             }
         }
     }

@@ -47,8 +47,6 @@ namespace gb::core {
         if (address == 0xFF45)
             return lyc;
         if (address == 0xFF46)
-            /* todo: When the CPU writes to this register, it tells the Gameboy to copy 160 bytes of memory from the
-             * Cartridge or WRAM directly into the PPU's OAM (Sprite) memory. */
             return dma;
         if (address == 0xFF47)
             return bgp;
@@ -64,6 +62,32 @@ namespace gb::core {
         return 0xFF;
     }
     void PPU::write_register(uint16_t address, uint8_t value) {
+        if (address == 0xFF40)
+            lcdc = value;
+        if (address == 0xFF41)
+            stat = value;
+        if (address == 0xFF42)
+            scy = value;
+        if (address == 0xFF43)
+            scx = value;
+        if (address == 0xFF44)
+            ly = value;
+        if (address == 0xFF45)
+            lyc = value;
+        if (address == 0xFF46)
+            /* todo: When the CPU writes to this register, it tells the Gameboy to copy 160 bytes of memory from the
+             * Cartridge or WRAM directly into the PPU's OAM (Sprite) memory. */
+            dma = value;
+        if (address == 0xFF47)
+            bgp = value;
+        if (address == 0xFF48)
+            obp0 = value;
+        if (address == 0xFF49)
+            obp1 = value;
+        if (address == 0xFF4A)
+            wy = value;
+        if (address == 0xFF4B)
+            wx = value;
 
     }
 }

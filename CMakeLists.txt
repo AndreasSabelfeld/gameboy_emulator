@@ -17,5 +17,6 @@ add_subdirectory(core)
 add_subdirectory(frontend)
 
 # uncomment when you add tests
+# target_compile_definitions(GameBoyEmulator PRIVATE EMULATOR_DEBUG)
 # enable_testing()
 # add_subdirectory(tests)
