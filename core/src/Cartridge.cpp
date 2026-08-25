@@ -35,9 +35,11 @@ namespace gb::core {
     }
 
     uint8_t Cartridge::read_rom(uint16_t address) const {
-        if (address < rom.size()) {
-            return rom[address];
-        } if (address < 0x8000) {
+        if (address < 0x4000) {
+            if (address < rom.size()) {
+                return rom[address];
+            }
+        } else if (address < 0x8000) {
             // Bank 1-127 is dynamically mapped
             uint32_t rom_offset = current_rom_bank * 0x4000;
             uint32_t real_index = rom_offset + (address - 0x4000);
@@ -100,5 +102,13 @@ namespace gb::core {
             case 0x05: sram.resize(64 * 1024); break;
                 default: sram.resize(0); break;
         }
+    }
+
+    std::vector<uint8_t>* Cartridge::get_rom() {
+        return &this->rom;
+    }
+
+    std::vector<uint8_t>* Cartridge::get_sram() {
+        return &this->sram;
     }
 }

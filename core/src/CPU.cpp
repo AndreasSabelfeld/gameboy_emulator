@@ -8,22 +8,43 @@
 #include <ostream>
 
 #include "MMU.h"
+#include "Timer.h"
 
 namespace gb::core {
-    CPU::CPU(MMU* mmu) {
+    CPU::CPU(MMU* mmu, Timer* timer) {
         this->mmu = mmu;
+        this->timer = timer;
 
         init_opcodes();
     };
 
-    uint8_t CPU::step() {
-        if (IME && (mmu->read(0xFFFF) & mmu->read(0xFF0F))) {
-            return handle_interrupts();
+    void CPU::tick() {
+        timer->tick(4);
+        frame_cycles += 4;
+    }
+
+    void CPU::step() {
+        uint8_t req = mmu->read(0xFF0F);            // IF
+        uint8_t en = mmu->read(0xFFFF);             // IE
+        uint8_t pending_interrupts = req & en & 0x1F;      // IF & IE is non-zero
+
+        if (is_halted) {
+            if (pending_interrupts > 0) {
+                is_halted = false;
+            } else {
+                tick();
+                return;
+            }
         }
 
-        uint8_t opcode = fetch_byte();
+        if (IME && pending_interrupts > 0) {
+            handle_interrupts();
+            return;
+        }
+
+        uint8_t opcode = fetch_byte();                     // automatically ticks 4
         Instruction& instr = opcode_table[opcode];
-        uint8_t cycles = execute(instr, opcode);
+        execute(instr, opcode);
 
         if (EI_delay == 0) {
             IME = true;
@@ -31,22 +52,70 @@ namespace gb::core {
         }
 
         if (EI_delay > 0) EI_delay--;
-        return cycles;
     }
 
-    uint8_t CPU::handle_interrupts() {
-        // todo
+    void CPU::handle_interrupts() {
+        uint8_t req = mmu->read(0xFF0F); // IF register (Requested)
+        uint8_t en = mmu->read(0xFFFF);  // IE register (Enabled)
+
+        // Check bits 0-4 in priority order
+        for (int i = 0; i <= 4; i++) {
+            if ((req & (1 << i)) && (en & (1 << i))) {
+                IME = false;
+                // acknowledge the interrupt by clearing its specific bit in IF
+                mmu->write(0xFF0F, req & ~(1 << i));
+
+                // hardware interrupt dispatch delay
+                tick();
+                tick();
+
+                // push current Program Counter to the stack
+                push_16bit(PC);
+
+                // jump to the appropriate hardware vector (ROM handles the interrupt)
+                switch (i) {
+                    case 0: PC = 0x0040; break; // Bit 0: VBlank
+                    case 1: PC = 0x0048; break; // Bit 1: LCD STAT
+                    case 2: PC = 0x0050; break; // Bit 2: Timer
+                    case 3: PC = 0x0058; break; // Bit 3: Serial
+                    case 4: PC = 0x0060; break; // Bit 4: Joypad
+                }
+
+                return;
+            }
+        }
+    }
+
+    uint8_t CPU::read_byte(uint16_t address) {
+        tick(); // Time passes during the read
+        return mmu->read(address);
+    }
+
+    void CPU::write_byte(uint16_t address, uint8_t value) {
+        tick(); // Time passes during the write
+        mmu->write(address, value);
     }
 
     uint8_t CPU::fetch_byte() {
-        return mmu->read(PC++);
+        return read_byte(PC++);
     }
 
     uint16_t CPU::fetch_word() {
         uint16_t lo = fetch_byte();
         uint16_t hi = fetch_byte();
-
         return static_cast<uint16_t>((hi << 8) | lo);
+    }
+
+    uint16_t CPU::pop_16bit() {
+        uint8_t lower = read_byte(SP++);
+        uint8_t upper = read_byte(SP++);
+        return static_cast<uint16_t>((upper << 8) | lower);
+    }
+
+    void CPU::push_16bit(uint16_t value) {
+        tick(); // Internal CPU delay before writing to stack (1 M-cycle)
+        write_byte(--SP, static_cast<uint8_t>(value >> 8));
+        write_byte(--SP, static_cast<uint8_t>(value & 0xFF));
     }
 
     void CPU::set_flag_z(bool value) {

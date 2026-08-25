@@ -17,6 +17,9 @@ namespace gb::core {
         uint8_t read_sram(uint16_t address) const;
         void write(uint16_t address, uint8_t value);
 
+        std::vector<uint8_t>* get_rom();
+        std::vector<uint8_t>* get_sram();
+
     private:
         std::vector<uint8_t> rom;                           // vector since rom sizes are dynamic
         std::vector<uint8_t> sram;                          // vector since sram sizes are dynamic

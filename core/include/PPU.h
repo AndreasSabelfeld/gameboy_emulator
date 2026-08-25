@@ -6,10 +6,14 @@
 
 #include <array>
 
+#include "Cartridge.h"
+#include "MMU.h"
+
 namespace gb::core {
     class PPU {
     public:
         PPU();
+        PPU(Cartridge* cartridge, MMU* mmu);
 
         uint8_t read_vram(uint16_t address);
         void write_vram(uint16_t address, uint8_t value);
@@ -19,9 +23,16 @@ namespace gb::core {
         uint8_t read_register(uint16_t address) const;
         void write_register(uint16_t address, uint8_t value);
 
+        void set_cartridge(Cartridge *cartridge);
+
+        void set_mmu(MMU *mmu);
+
     private:
-        std::array<uint8_t, 0x2000> vram;   // 0x8000 - 0x9FFF
-        std::array<uint8_t, 0x009F> oam;    // 0xFE00 - 0xFE9F
+        Cartridge* cartridge;
+        MMU* mmu;
+
+        std::array<uint8_t, 0x2000> vram{};   // 0x8000 - 0x9FFF
+        std::array<uint8_t, 0x009F> oam{};    // 0xFE00 - 0xFE9F
 
         uint8_t lcdc = 0x91;    // 0xFF40 - LCD Control
         uint8_t stat = 0x85;    // 0xFF41 - LCD Status

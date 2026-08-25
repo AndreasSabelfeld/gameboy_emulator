@@ -5,7 +5,15 @@
 #include "PPU.h"
 
 namespace gb::core {
-    PPU::PPU() = default;
+    PPU::PPU() {
+        this->cartridge = nullptr;
+        this->mmu = nullptr;
+    }
+
+    PPU::PPU(Cartridge* cartridge, MMU* mmu) {
+        this->cartridge = cartridge;
+        this->mmu = mmu;
+    }
 
     uint8_t PPU::read_vram(uint16_t address) {
         if (address >= 0x8000 && address < 0xA000) {
@@ -74,10 +82,31 @@ namespace gb::core {
             ly = value;
         if (address == 0xFF45)
             lyc = value;
-        if (address == 0xFF46)
-            /* todo: When the CPU writes to this register, it tells the Gameboy to copy 160 bytes of memory from the
-             * Cartridge or WRAM directly into the PPU's OAM (Sprite) memory. */
+        if (address == 0xFF46) {
             dma = value;
+            uint16_t sourceAddr = dma * 0x100;
+            uint16_t offset;
+
+            /*if (dma < 0x80) {
+                // read ROM
+                offset = 0;
+                std::copy_n(cartridge->get_rom()->begin() + sourceAddr - offset, 160, oam.begin());
+            } else if (dma < 0xA0) {
+                // read VRAM
+                offset = 0x8000;
+                std::copy_n(vram.begin() + sourceAddr - offset, 160, oam.begin());
+            } else if (dma < 0xC0) {
+                // read SRAM
+                offset = 0xA000;
+                std::copy_n(cartridge->get_sram()->begin() + sourceAddr - offset, 160, oam.begin());
+            } else if (dma < 0xE0) {
+                // read WRAM
+                offset = 0xC000;
+                std::copy_n(cartridge->get_rom()->begin() + sourceAddr - offset, 160, oam.begin());
+            } else {
+                // Out of bounds
+            }*/
+        }
         if (address == 0xFF47)
             bgp = value;
         if (address == 0xFF48)
@@ -89,5 +118,13 @@ namespace gb::core {
         if (address == 0xFF4B)
             wx = value;
 
+    }
+
+    void PPU::set_cartridge(Cartridge* cartridge) {
+        this->cartridge = cartridge;
+    }
+
+    void PPU::set_mmu(MMU* mmu) {
+        this->mmu = mmu;
     }
 }

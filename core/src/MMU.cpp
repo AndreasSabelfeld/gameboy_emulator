@@ -19,6 +19,7 @@ namespace gb::core {
         this->joypad = joypad;
         this->timer = timer;
         this->cable = cable;
+        this->hram = hram;
     }
 
     uint8_t MMU::read(uint16_t address) {
@@ -88,6 +89,13 @@ namespace gb::core {
         } else if (address == 0xFFFF) {        // IE register
             IE_reg = value;
         }
+    }
+
+    std::array<uint8_t, 0x007E> *MMU::get_hram() {
+        return &this->hram;
+    }
+    std::array<uint8_t, 0x2000> *MMU::get_wram() {
+        return &this->wram;
     }
 
 }
