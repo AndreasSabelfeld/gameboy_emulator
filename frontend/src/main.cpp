@@ -39,7 +39,7 @@ void run_frame(gb::core::CPU& cpu) {
 }
 
 int main (int argc, char ** argv) {
-    auto cartridge = gb::core::Cartridge(ROM_ROOT + "tetris.gb");
+    auto cartridge = gb::core::Cartridge(ROM_ROOT + "zelda.gb");
 #ifdef EMULATOR_DEBUG
     uint8_t test_rom_idx = 7;
     cartridge = gb::core::Cartridge(TEST_ROOT + roms[test_rom_idx]);
