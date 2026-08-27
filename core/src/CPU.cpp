@@ -8,18 +8,26 @@
 #include <ostream>
 
 #include "MMU.h"
+#include "PPU.h"
 #include "Timer.h"
 
 namespace gb::core {
-    CPU::CPU(MMU* mmu, Timer* timer) {
+    CPU::CPU(MMU* mmu, Timer* timer, PPU* ppu) {
         this->mmu = mmu;
         this->timer = timer;
+        this->ppu = ppu;
 
         init_opcodes();
+#ifdef SKIP_BOOT_ROM
+        // skip boot-up sequence
+        this->mmu->boot_rom_active = false;
+#endif
+        reset();
     };
 
     void CPU::tick() {
         timer->tick(4);
+        ppu->tick(4);
         frame_cycles += 4;
     }
 
@@ -55,6 +63,8 @@ namespace gb::core {
     }
 
     void CPU::handle_interrupts() {
+        if (!IME) return;
+
         uint8_t req = mmu->read(0xFF0F); // IF register (Requested)
         uint8_t en = mmu->read(0xFFFF);  // IE register (Enabled)
 
@@ -84,6 +94,31 @@ namespace gb::core {
                 return;
             }
         }
+    }
+
+    void CPU::reset() {
+        frame_cycles = 0;
+        if (mmu->boot_rom_active) {
+            AF = { .word = 0x0000 };
+            BC = { .word = 0x0000 };
+            DE = { .word = 0x0000 };
+            HL = { .word = 0x0000 };
+
+            PC = 0x0000;            // program counter
+            SP = 0x0000;            // stack pointer
+        } else {
+            AF = { .word = 0x01B0 };
+            BC = { .word = 0x0013 };
+            DE = { .word = 0x00D8 };
+            HL = { .word = 0x014D };
+
+            PC = 0x0100;            // program counter
+            SP = 0xFFFE;            // stack pointer
+        }
+
+        IME = false;            // Interrupt Master Enable
+        EI_delay = -1;          // -1: not scheduled, 0 signal EI, >0: delay
+        is_halted = false;
     }
 
     uint8_t CPU::read_byte(uint16_t address) {

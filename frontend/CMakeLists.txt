@@ -1,6 +1,8 @@
 # Create the actual runnable executable
 add_executable(GameBoyFrontEnd
         src/main.cpp
+        include/Renderer.h
+        src/Renderer.cpp
 )
 
 # Tell the frontend where its own header files are

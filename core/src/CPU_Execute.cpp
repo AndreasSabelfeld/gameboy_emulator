@@ -9,11 +9,9 @@
 #include "CPU.h"
 #include "Timer.h"
 
-// #define EMULATOR_DEBUG
-
 namespace gb::core {
     void CPU::execute(const Instruction &inst, uint8_t opcode) {
-#ifdef EMULATOR_DEBUG
+#ifdef PRINT_TRACE
         std::cout << "Executing: " << inst.mnemonic
               << " at PC: " << std::hex << PC
               << " | DE: " << std::hex << DE.word

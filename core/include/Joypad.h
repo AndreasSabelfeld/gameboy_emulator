@@ -4,6 +4,7 @@
 
 #pragma once
 #include <cstdint>
+#include "MMU.h"
 
 namespace gb::core {
     class Joypad {
@@ -14,9 +15,10 @@ namespace gb::core {
         void write(uint16_t address, uint8_t value);
         void press_button(bool is_dpad, uint8_t button_bit);
         void release_button(bool is_dpad, uint8_t button_bit);
+        void set_mmu(MMU* mmu);
 
     private:
-
+        MMU* mmu;
         /*
         Bit 7 - Not used
         Bit 6 - Not used

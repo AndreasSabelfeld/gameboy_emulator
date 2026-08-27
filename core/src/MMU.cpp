@@ -22,8 +22,17 @@ namespace gb::core {
         this->hram = hram;
     }
 
+    void MMU::reset(Cartridge* cartridge) {
+        this->cartridge = cartridge;
+
+        IF_reg = 0xE1;              // 0xFF0F (Top 3 bits always 1)
+        IE_reg = 0x00;              // 0xFFFF
+    }
+
     uint8_t MMU::read(uint16_t address) {
-        if (address < 0x8000) {                // reading rom
+        if (boot_rom_active && address < 0x0100) {
+            return boot_rom[address];
+        } if (address < 0x8000) {                // reading rom
             return cartridge->read_rom(address);
         } if (address < 0xA000) {              // reading vram
             return ppu->read_vram(address);
@@ -82,6 +91,10 @@ namespace gb::core {
             IF_reg = value;
         } else if (address < 0xFF40) {         // audio
             apu->write(address, value);
+        } else if (address == 0xFF50) {
+            if (value != 0) {
+                boot_rom_active = false;
+            }
         } else if (address < 0xFF80) {         // PPU Registers
             ppu->write_register(address, value);
         } else if (address < 0xFFFF) {         // writing hram
@@ -91,7 +104,7 @@ namespace gb::core {
         }
     }
 
-    std::array<uint8_t, 0x007E> *MMU::get_hram() {
+    std::array<uint8_t, 0x007F> *MMU::get_hram() {
         return &this->hram;
     }
     std::array<uint8_t, 0x2000> *MMU::get_wram() {

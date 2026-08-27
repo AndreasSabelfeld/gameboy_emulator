@@ -39,3 +39,6 @@
 
 # debug information files
 *.dwo
+
+tetris.gb
+zelda.gb

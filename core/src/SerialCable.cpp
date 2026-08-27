@@ -6,7 +6,10 @@
 #include <iostream>
 
 namespace gb::core {
-    SerialCable::SerialCable() = default;
+    SerialCable::SerialCable() {
+        has_passed_test = false;
+    }
+
 
     std::string serial_buffer;
 
@@ -36,9 +39,9 @@ namespace gb::core {
 
                 // todo: signal MMU to trigger the Serial Interrupt here!
             }
-            if (serial_buffer.find("Passed") != std::string::npos) {
-                std::cout << "\nTest ROM passed! Halting emulator.\n";
-                exit(0); // Or gracefully signal your main loop to stop
+            if (!has_passed_test && serial_buffer.find("Passed") != std::string::npos) {
+                std::cout << "\nTest ROM passed!";
+                has_passed_test = true;
             }
         }
     }

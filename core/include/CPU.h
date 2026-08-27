@@ -3,6 +3,9 @@
 //
 
 #pragma once
+// #define EMULATOR_DEBUG
+#define SKIP_BOOT_ROM
+// #define PRINT_TRACE
 
 #include <cstdint>
 #include <array>
@@ -25,10 +28,9 @@ namespace gb::core {
 
     class CPU {
     public:
-        CPU(MMU* mmu, Timer* timer);
+        CPU(MMU* mmu, Timer* timer, PPU* ppu);
 
         void tick();
-
         void step();
         void execute(const Instruction& inst, uint8_t opcode);
         void reset();
@@ -37,11 +39,12 @@ namespace gb::core {
     private:
         MMU* mmu;
         Timer* timer;
+        PPU* ppu;
 
-        Register AF = { .word = 0x01B0 };
-        Register BC = { .word = 0x0013 };
-        Register DE = { .word = 0x00D8 };
-        Register HL = { .word = 0x014D };
+        Register AF;
+        Register BC;
+        Register DE;
+        Register HL;
 
         // Aliases:
         uint8_t& A = AF.high;
@@ -62,8 +65,8 @@ namespace gb::core {
         uint8_t& H = HL.high;
         uint8_t& L = HL.low;
 
-        uint16_t PC = 0x0100;        // program counter TODO: initialize at 0x0000 to emulate boot-up sequence once ready
-        uint16_t SP = 0xFFFE;        // stack pointer
+        uint16_t PC;                 // program counter
+        uint16_t SP;                 // stack pointer
 
         bool IME = false;            // Interrupt Master Enable
         int EI_delay = -1;           // -1: not scheduled, 0 signal EI, >0: delay
