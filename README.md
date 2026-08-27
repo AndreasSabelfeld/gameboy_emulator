@@ -61,7 +61,7 @@ cmake --build .
 ### Running the Emulator
 Once compiled, you can run the executable from the build directory (or your IDE's output folder like cmake-build-debug), passing the path to a ROM file as an argument:
 ```bash
-./GameBoyFrontEnd ../roms/tetris.gb
+./frontend/GameBoyFrontEnd ../roms/hello.gb
 ```
 
 # Important References & Documentation
