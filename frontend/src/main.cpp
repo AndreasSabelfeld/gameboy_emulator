@@ -3,6 +3,8 @@
 //
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "CPU.h"
 #include "MMU.h"
@@ -12,10 +14,9 @@
 #include "Joypad.h"
 #include "Timer.h"
 #include "SerialCable.h"
-
 #include "Renderer.h"
 
-const std::string ROM_ROOT = "/Users/andy/CLionProjects/gameboy_emulator/roms/";
+// Hardcoded paths for debug mode
 const std::string TEST_ROOT = "/Users/andy/CLionProjects/gameboy_emulator/roms/gb-test-roms-master/";
 
 std::vector<std::string> roms = {
@@ -38,36 +39,61 @@ void run_frame(gb::core::CPU& cpu) {
     }
 }
 
-int main (int argc, char ** argv) {
-    auto cartridge = gb::core::Cartridge(ROM_ROOT + "zelda.gb");
+int main(int argc, char** argv) {
+    std::string rom_path;
+
 #ifdef EMULATOR_DEBUG
+    // If debugging, ignore arguments and load the specific test ROM
     uint8_t test_rom_idx = 7;
-    cartridge = gb::core::Cartridge(TEST_ROOT + roms[test_rom_idx]);
+    rom_path = TEST_ROOT + roms[test_rom_idx];
+    std::cout << "[DEBUG MODE] Overriding input with test ROM: " << rom_path << std::endl;
+#else
+    // Normal Mode: Require a ROM path via command line argument
+    if (argc < 2) {
+        std::cerr << "Error: No ROM provided.\n";
+        std::cerr << "Usage: " << argv[0] << " <path_to_rom.gb>\n";
+        return EXIT_FAILURE;
+    }
+    rom_path = argv[1];
 #endif
-    auto ppu = gb::core::PPU();
-    ppu.set_cartridge(&cartridge);
-    auto apu = gb::core::APU();
-    auto joypad = gb::core::Joypad();
-    auto timer = gb::core::Timer();
-    auto serial_cable = gb::core::SerialCable();
 
-    auto mmu = gb::core::MMU(&cartridge, &ppu, &apu, &joypad, &timer, &serial_cable);
-    timer.set_mmu(&mmu);
-    ppu.set_mmu(&mmu);
-    joypad.set_mmu(&mmu);
+    try {
+        // Initialize Hardware Components
+        auto cartridge = gb::core::Cartridge(rom_path);
+        auto ppu = gb::core::PPU();
+        ppu.set_cartridge(&cartridge);
 
-    auto cpu = gb::core::CPU(&mmu, &timer, &ppu);
+        auto apu = gb::core::APU();
+        auto joypad = gb::core::Joypad();
+        auto timer = gb::core::Timer();
+        auto serial_cable = gb::core::SerialCable();
 
-    gb::frontend::Renderer renderer(4); // 4x scale
+        auto mmu = gb::core::MMU(&cartridge, &ppu, &apu, &joypad, &timer, &serial_cable);
 
-    std::cout << "Starting Emulator..." << std::endl;
+        // Wire up MMU dependencies
+        timer.set_mmu(&mmu);
+        ppu.set_mmu(&mmu);
+        joypad.set_mmu(&mmu);
 
-    bool running = true;
-    while (running) {
-        running = renderer.poll_events(joypad);
-        run_frame(cpu);
-        renderer.render_frame(ppu.get_screen_buffer());
+        auto cpu = gb::core::CPU(&mmu, &timer, &ppu);
+
+        // Initialize Frontend
+        gb::frontend::Renderer renderer(4); // 4x scale
+        std::cout << "Starting Emulator with ROM: " << rom_path << std::endl;
+
+        // Main Emulator Loop
+        bool running = true;
+        while (running) {
+            running = renderer.poll_events(joypad);
+            run_frame(cpu);
+            renderer.render_frame(ppu.get_screen_buffer());
+        }
+
+    } catch (const std::exception& e) {
+        // Catch initialization errors (like a bad ROM path)
+        std::cerr << "Fatal Error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
