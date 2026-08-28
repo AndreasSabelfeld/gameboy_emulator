@@ -10,12 +10,14 @@
 #include "MMU.h"
 #include "PPU.h"
 #include "Timer.h"
+#include "APU.h"
 
 namespace gb::core {
-    CPU::CPU(MMU* mmu, Timer* timer, PPU* ppu) {
+    CPU::CPU(MMU* mmu, Timer* timer, PPU* ppu, APU* apu) {
         this->mmu = mmu;
         this->timer = timer;
         this->ppu = ppu;
+        this->apu = apu;
 
         init_opcodes();
 #ifdef SKIP_BOOT_ROM
@@ -28,6 +30,7 @@ namespace gb::core {
     void CPU::tick() {
         timer->tick(4);
         ppu->tick(4);
+        apu->tick(4);
         frame_cycles += 4;
     }
 

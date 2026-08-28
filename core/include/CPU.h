@@ -4,7 +4,7 @@
 
 #pragma once
 // #define EMULATOR_DEBUG
-#define SKIP_BOOT_ROM
+// #define SKIP_BOOT_ROM
 // #define PRINT_TRACE
 
 #include <cstdint>
@@ -28,7 +28,7 @@ namespace gb::core {
 
     class CPU {
     public:
-        CPU(MMU* mmu, Timer* timer, PPU* ppu);
+        CPU(MMU* mmu, Timer* timer, PPU* ppu, APU* apu);
 
         void tick();
         void step();
@@ -40,6 +40,7 @@ namespace gb::core {
         MMU* mmu;
         Timer* timer;
         PPU* ppu;
+        APU* apu;
 
         Register AF;
         Register BC;

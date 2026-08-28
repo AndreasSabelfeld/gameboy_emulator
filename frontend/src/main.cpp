@@ -15,6 +15,7 @@
 #include "Timer.h"
 #include "SerialCable.h"
 #include "Renderer.h"
+#include "Audio.h"
 
 // Hardcoded paths for debug mode
 const std::string TEST_ROOT = "/Users/andy/CLionProjects/gameboy_emulator/roms/gb-test-roms-master/";
@@ -75,10 +76,11 @@ int main(int argc, char** argv) {
         ppu.set_mmu(&mmu);
         joypad.set_mmu(&mmu);
 
-        auto cpu = gb::core::CPU(&mmu, &timer, &ppu);
+        auto cpu = gb::core::CPU(&mmu, &timer, &ppu, &apu);
 
         // Initialize Frontend
         gb::frontend::Renderer renderer(4); // 4x scale
+        gb::frontend::Audio audio;               // start sound card
         std::cout << "Starting Emulator with ROM: " << rom_path << std::endl;
 
         // Main Emulator Loop
@@ -87,6 +89,10 @@ int main(int argc, char** argv) {
             running = renderer.poll_events(joypad);
             run_frame(cpu);
             renderer.render_frame(ppu.get_screen_buffer());
+
+            std::vector<float> audio_buffer = apu.get_audio_buffer();
+            audio.push_samples(audio_buffer);
+            apu.clear_audio_buffer();
         }
 
     } catch (const std::exception& e) {

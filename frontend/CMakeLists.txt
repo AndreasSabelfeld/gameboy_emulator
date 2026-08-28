@@ -3,6 +3,9 @@ add_executable(GameBoyFrontEnd
         src/main.cpp
         include/Renderer.h
         src/Renderer.cpp
+        src/Input.cpp
+        include/Audio.h
+        src/Audio.cpp
 )
 
 # Tell the frontend where its own header files are
